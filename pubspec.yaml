@@ -1,0 +1,37 @@
+name: nibras_docs
+description: Premium offline document workspace by Nibras Code.
+publish_to: none
+version: 6.0.0+6
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  path_provider: ^2.1.5
+  share_plus: ^10.1.2
+  pdf: ^3.13.0
+  flutter_launcher_icons: ^0.14.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/nibras_icon.png
+    - assets/fonts/DejaVuSans.ttf
+    - assets/fonts/DejaVuSans-Bold.ttf
+    - assets/fonts/DejaVuSerif.ttf
+    - assets/fonts/DejaVuSansMono.ttf
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: assets/images/nibras_icon.png
+  adaptive_icon_background: "#061226"
+  adaptive_icon_foreground: assets/images/nibras_icon.png
