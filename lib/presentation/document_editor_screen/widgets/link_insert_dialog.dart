@@ -11,7 +11,7 @@ class LinkInsertDialog extends StatefulWidget {
     );
   }
 
-  final String selected;
+  final String? selected;
   const LinkInsertDialog._({required this.selected});
 
   @override
