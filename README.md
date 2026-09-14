@@ -1,59 +1,142 @@
-# Nibras Docs
+# Flutter
 
-Premium, dark-blue, offline Flutter document workspace.
+A modern Flutter-based mobile application utilizing the latest mobile development technologies and tools for building responsive cross-platform applications.
 
-## Hazır funksiyalar
-- Splash və Nibras brend dizaynı
-- Sənəd yaratmaq, redaktə etmək və lokal yadda saxlamaq
-- Axtarış, kateqoriyalar, seçilmişlər və pin
-- Söz sayı, silmə, TXT export/share
-- Dark/light tema
-- GitHub Actions ilə release APK build
+## 📋 Prerequisites
 
-## GitHub ilə APK
-1. ZIP-i açın və faylları yeni GitHub repository-yə yükləyin.
-2. Actions bölməsində **Build Nibras Docs APK** workflow-nu başladın.
-3. Build bitdikdən sonra Artifacts bölməsindən **Nibras-Docs-APK** faylını endirin.
+- Flutter SDK (^3.38.4)
+- Dart SDK
+- Android Studio / VS Code with Flutter extensions
+- Android SDK / Xcode (for iOS development)
 
-## Lokal build
+## 🛠️ Installation
+
+1. Install dependencies:
 ```bash
-flutter create --platforms=android --org com.nibrascode .
 flutter pub get
-dart run flutter_launcher_icons
-flutter build apk --release
 ```
 
-APK yolu: `build/app/outputs/flutter-apk/app-release.apk`
+2. Run the application:
 
-> Qeyd: İlk platform yaratma əmri `lib/main.dart` faylını dəyişərsə, ZIP-dəki versiyanı geri qaytarın. GitHub workflow-da mövcud fayllar qorunur.
+To run the app with environment variables defined in an env.json file, follow the steps mentioned below:
+1. Through CLI
+    ```bash
+    flutter run --dart-define-from-file=env.json
+    ```
+2. For VSCode
+    - Open .vscode/launch.json (create it if it doesn't exist).
+    - Add or modify your launch configuration to include --dart-define-from-file:
+    ```json
+    {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Launch",
+                "request": "launch",
+                "type": "dart",
+                "program": "lib/main.dart",
+                "args": [
+                    "--dart-define-from-file",
+                    "env.json"
+                ]
+            }
+        ]
+    }
+    ```
+3. For IntelliJ / Android Studio
+    - Go to Run > Edit Configurations.
+    - Select your Flutter configuration or create a new one.
+    - Add the following to the "Additional arguments" field:
+    ```bash
+    --dart-define-from-file=env.json
+    ```
 
-## v2 real storage core
-- App sənədləri tətbiqin Documents/NibrasDocs/workspace.json faylında atomik yazma ilə saxlanır.
-- Dashboard real sənəd, seçilmiş, pin və səbət saylarını göstərir.
-- Recycle Bin sənədi bərpa və ya həmişəlik silmə funksiyasına malikdir.
-- Backup düyməsi tarixli JSON ehtiyat nüsxəsi yaradır.
+## 📁 Project Structure
 
-## v3 qovluq sistemi
-- İstifadəçi tətbiqin içində yeni qovluq yarada bilər.
-- Qovluqlar lokal workspace faylında saxlanır.
-- Qovluq çipləri ilə sənədlər real vaxtda filtrlənir.
-- Yeni sənəd seçilmiş qovluğa əlavə olunur.
-- Redaktorda sənədi başqa qovluğa köçürmək mümkündür.
+```
+flutter_app/
+├── android/            # Android-specific configuration
+├── ios/                # iOS-specific configuration
+├── lib/
+│   ├── core/           # Core utilities and services
+│   │   └── utils/      # Utility classes
+│   ├── presentation/   # UI screens and widgets
+│   │   └── splash_screen/ # Splash screen implementation
+│   ├── routes/         # Application routing
+│   ├── theme/          # Theme configuration
+│   ├── widgets/        # Reusable UI components
+│   └── main.dart       # Application entry point
+├── assets/             # Static assets (images, fonts, etc.)
+├── pubspec.yaml        # Project dependencies and configuration
+└── README.md           # Project documentation
+```
 
-## v4 etiket və qovluq idarəetməsi
-- Sənədlərə birdən çox etiket yazmaq mümkündür.
-- Axtarış artıq başlıq, məzmun və etiketlərdə işləyir.
-- Qovluğa uzun basaraq adını dəyişmək mümkündür.
-- Qovluq silindikdə içindəki sənədlər Personal qovluğuna köçürülür.
+## 🧩 Adding Routes
 
-## v5 PDF və şrift dəstəyi
-- A4 çoxsəhifəli PDF ixracı.
-- Sans, Serif və Mono şrift seçimi.
-- DejaVu Unicode şriftləri layihəyə lokal daxil edilib.
-- Azərbaycan, türk, ərəb, fars, ivrit, kiril və geniş Latın simvolları üçün Unicode mətn dəstəyi.
-- Ərəb/fars/ivrit mətn aşkarlananda RTL istiqaməti avtomatik tətbiq edilir.
-- PDF başlığı, kateqoriya, etiketlər, səhifə nömrəsi və Nibras Docs başlığı ilə hazırlanır.
-- PDF tətbiqin NibrasDocs/Exports/PDF qovluğunda saxlanır və paylaşma menyusu açılır.
+To add new routes to the application, update the `lib/routes/app_routes.dart` file:
 
-## v6
-PDF A3, A4, A5, A6, Letter, Legal; portret/landşaft. Nibras Docs EPUB önizləmə: Phone, Tablet, Kindle; Light, Sepia, Dark, AMOLED; mətn ölçüsü.
+```dart
+import 'package:flutter/material.dart';
+import 'package:package_name/presentation/home_screen/home_screen.dart';
+
+class AppRoutes {
+  static const String initial = '/';
+  static const String home = '/home';
+
+  static Map<String, WidgetBuilder> routes = {
+    initial: (context) => const SplashScreen(),
+    home: (context) => const HomeScreen(),
+    // Add more routes as needed
+  }
+}
+```
+
+## 🎨 Theming
+
+This project includes a comprehensive theming system with both light and dark themes:
+
+```dart
+// Access the current theme
+ThemeData theme = Theme.of(context);
+
+// Use theme colors
+Color primaryColor = theme.colorScheme.primary;
+```
+
+The theme configuration includes:
+- Color schemes for light and dark modes
+- Typography styles
+- Button themes
+- Input decoration themes
+- Card and dialog themes
+
+## 📱 Responsive Design
+
+The app is built with responsive design using the Sizer package:
+
+```dart
+// Example of responsive sizing
+Container(
+  width: 50.w, // 50% of screen width
+  height: 20.h, // 20% of screen height
+  child: Text('Responsive Container'),
+)
+```
+## 📦 Deployment
+
+Build the application for production:
+
+```bash
+# For Android
+flutter build apk --release
+
+# For iOS
+flutter build ios --release
+```
+
+## 🙏 Acknowledgments
+- Built with [Rocket.new](https://rocket.new)
+- Powered by [Flutter](https://flutter.dev) & [Dart](https://dart.dev)
+- Styled with Material Design
+
+Built with ❤️ on Rocket.new
