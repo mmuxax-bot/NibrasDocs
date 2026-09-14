@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class LinkInsertDialog extends StatefulWidget {
-  const LinkInsertDialog({super.key});
+  const LinkInsertDialog({super.key, this.selected});
 
   static Future<String?> show(BuildContext context, {String selected = ''}) {
     return showDialog<String>(
