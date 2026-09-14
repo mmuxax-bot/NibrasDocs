@@ -79,7 +79,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
       name: 'Pro',
       description:
           'Hər gün yazan frilanser və mütəxəssislər üçün qabaqcıl alətlər.',
-      price: '\$2\$2\$5.75',
+      price: '$2.75',
       period: '/ay',
       iconEmoji: '⚡',
       accentColor: AppTheme.goldLight,
@@ -101,7 +101,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
       name: 'Elite',
       description:
           'Komandalar və güclü istifadəçilər üçün tam Nibras Docs təcrübəsi.',
-      price: '$5\$2\$5.75',
+      price: '$5.75',
       period: '/ay',
       iconEmoji: '🚀',
       accentColor: AppTheme.gold,
