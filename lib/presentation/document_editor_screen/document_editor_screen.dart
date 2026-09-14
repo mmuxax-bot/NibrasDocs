@@ -264,13 +264,13 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen>
 
 '
             'Pro ($2.75/mo): up to 150 pages.
-Elite (\\$5.75/mo): unlimited length.
+Elite (\$5.75/mo): unlimited length.
 
 '
             'You can still read and export; upgrade to keep writing longer books.'
           : tier == PlanTier.pro
               ? 'Pro allows up to ${PremiumService.maxPagesPro} pages.\n\n'
-                'Elite (\\$5.75/mo) removes the page limit for long books.'
+                'Elite (\$5.75/mo) removes the page limit for long books.'
               : 'Page limit reached.';
       await showDialog(
         context: context,
