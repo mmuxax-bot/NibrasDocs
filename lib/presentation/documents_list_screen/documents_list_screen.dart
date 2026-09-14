@@ -129,11 +129,11 @@ class _DocumentsListScreenState extends State<DocumentsListScreen>
           title: const Text('Document limit'),
           content: Text(
             tier == PlanTier.free
-                ? 'Free plan includes up to ${PremiumService.maxDocsFree} documents.
+                ? "Free plan includes up to ${PremiumService.maxDocsFree} documents.
 
 '
-                  'Upgrade to Pro ($2.75/mo) for unlimited documents and up to 150 pages each.'
-                : 'Upgrade to Elite ($5.75/mo) for unlimited page length.',
+                  "Upgrade to Pro (\$2\$2\$5.75/mo) for unlimited documents and up to 150 pages each."
+                : "Upgrade to Elite ($5\$2\$5.75/mo) for unlimited page length.",
           ),
           actions: [
             TextButton(

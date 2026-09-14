@@ -32,7 +32,7 @@ class _ImageInsertDialogState extends State<ImageInsertDialog> {
   Widget build(BuildContext context) {
     final file = File(widget.path);
     return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
+      height: MediaQuery.of(context).size.height * 0\$2\$5.75,
       decoration: const BoxDecoration(
         color: Color(0xFF121212),
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),

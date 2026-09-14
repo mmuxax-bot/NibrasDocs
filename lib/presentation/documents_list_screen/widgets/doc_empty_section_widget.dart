@@ -35,7 +35,7 @@ class DocEmptySectionWidget extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               hasSearch
-                  ? 'Try a different search term or clear the filter to see all documents.'
+                  ? 'Try a different search term or clear the filter to see all documents."
                   : 'Create your first document and start writing. All your work will be organized here.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
