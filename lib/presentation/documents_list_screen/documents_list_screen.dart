@@ -97,7 +97,7 @@ class _DocumentsListScreenState extends State<DocumentsListScreen>
   }
 
   String _formatDate(DateTime dt) {
-    return '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year}';
+    return '\${dt.day.toString().padLeft(2, '0')}.\${dt.month.toString().padLeft(2, '0')}.\${dt.year}';
   }
 
   void _openEditor(DocumentModel doc) {
@@ -129,11 +129,11 @@ class _DocumentsListScreenState extends State<DocumentsListScreen>
           title: const Text('Document limit'),
           content: Text(
             tier == PlanTier.free
-                ? 'Free plan includes up to ${PremiumService.maxDocsFree} documents.
+                ? 'Free plan includes up to \${PremiumService.maxDocsFree} documents.
 
 '
-                  'Upgrade to Pro ($2.75/mo) for unlimited documents and up to 150 pages each.'
-                : 'Upgrade to Elite ($5.75/mo) for unlimited page length.',
+                  'Upgrade to Pro (\$2.75/mo) for unlimited documents and up to 150 pages each.'
+                : 'Upgrade to Elite (\$5.75/mo) for unlimited page length.',
           ),
           actions: [
             TextButton(
@@ -616,10 +616,10 @@ class _DocumentsListScreenState extends State<DocumentsListScreen>
           fontWeight: FontWeight.w500,
         ),
         tabs: [
-          Tab(text: '  ${l10n.allDocuments}  '),
-          Tab(text: '  ${l10n.recent}  '),
-          Tab(text: '  ${l10n.favorites}  '),
-          Tab(text: '  ${l10n.cloud}  '),
+          Tab(text: '  \${l10n.allDocuments}  '),
+          Tab(text: '  \${l10n.recent}  '),
+          Tab(text: '  \${l10n.favorites}  '),
+          Tab(text: '  \${l10n.cloud}  '),
         ],
       ),
     );
@@ -807,7 +807,7 @@ class _DocumentsListScreenState extends State<DocumentsListScreen>
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${_formatDate(doc.updatedAt)} · ${doc.wordCount} ${l10n.words}',
+                      '\${_formatDate(doc.updatedAt)} · \${doc.wordCount} \${l10n.words}',
                       style: GoogleFonts.dmSans(
                         fontSize: 12,
                         color: theme.colorScheme.onSurfaceVariant,
@@ -869,7 +869,7 @@ class _DocumentsListScreenState extends State<DocumentsListScreen>
           ),
           const SizedBox(height: 16),
           Text(
-            '${_docs.length} ${l10n.documentsSaved}',
+            '\${_docs.length} \${l10n.documentsSaved}',
             style: GoogleFonts.dmSans(
               fontSize: 14,
               fontWeight: FontWeight.w500,
