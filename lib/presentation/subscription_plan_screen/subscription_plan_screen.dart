@@ -79,7 +79,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
       name: 'Pro',
       description:
           'Hər gün yazan frilanser və mütəxəssislər üçün qabaqcıl alətlər.',
-      price: '\$2.75',
+      price: r'$2.75',
       period: '/ay',
       iconEmoji: '⚡',
       accentColor: AppTheme.goldLight,
@@ -101,7 +101,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
       name: 'Elite',
       description:
           'Komandalar və güclü istifadəçilər üçün tam Nibras Docs təcrübəsi.',
-      price: '\$5.75',
+      price: r'$5.75',
       period: '/ay',
       iconEmoji: '🚀',
       accentColor: AppTheme.gold,
@@ -210,14 +210,14 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
         backgroundColor: AppTheme.surfaceDark,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          '\${plan.name} planına abunə ol',
+          '${plan.name} planına abunə ol',
           style: const TextStyle(
             color: Color(0xFFE8EAF6),
             fontWeight: FontWeight.w700,
           ),
         ),
         content: Text(
-          '\${plan.name} planına \${plan.price}\${plan.period} qiymətinə abunə olmaq üzrəsiniz.\n\nLemon Squeezy vasitəsilə təhlükəsiz ödəniş.',
+          '${plan.name} planına ${plan.price}${plan.period} qiymətinə abunə olmaq üzrəsiniz.\n\nLemon Squeezy vasitəsilə təhlükəsiz ödəniş.',
           style: const TextStyle(color: Color(0xFF8899BB)),
         ),
         actions: [
@@ -234,7 +234,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
               backgroundColor: AppTheme.gold,
               foregroundColor: AppTheme.primary,
             ),
-            child: Text('\${plan.name} planını seç'),
+            child: Text('${plan.name} planını seç'),
           ),
         ],
       ),

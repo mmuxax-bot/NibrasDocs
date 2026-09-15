@@ -77,6 +77,7 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state, navigationShell) =>
           AppScaffold(navigationShell: navigationShell),
       branches: [
+        // Home
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -85,18 +86,24 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
+        // Documents tab — same list (filter via UI); editor is push-only
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: AppRoutes.documentEditorScreen,
-              builder: (context, state) {
-                final doc = state.extra as Map<String, dynamic>?;
-                return DocumentEditorScreen(documentData: doc);
-              },
+              path: '/documents-library',
+              builder: (context, state) => const DocumentsListScreen(),
             ),
           ],
         ),
       ],
+    ),
+    // Editor is a full-screen push, not a bottom-tab root
+    GoRoute(
+      path: AppRoutes.documentEditorScreen,
+      builder: (context, state) {
+        final doc = state.extra as Map<String, dynamic>?;
+        return DocumentEditorScreen(documentData: doc);
+      },
     ),
     GoRoute(
       path: AppRoutes.templatesScreen,

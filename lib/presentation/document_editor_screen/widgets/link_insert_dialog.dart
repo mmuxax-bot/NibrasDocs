@@ -2,17 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class LinkInsertDialog extends StatefulWidget {
-  const LinkInsertDialog({super.key, this.selected});
+  final String selected;
+
+  const LinkInsertDialog({super.key, this.selected = ''});
 
   static Future<String?> show(BuildContext context, {String selected = ''}) {
     return showDialog<String>(
       context: context,
-      builder: (_) => LinkInsertDialog._(selected: selected),
+      builder: (_) => LinkInsertDialog(selected: selected),
     );
   }
-
-  final String? selected;
-  const LinkInsertDialog._({required this.selected});
 
   @override
   State<LinkInsertDialog> createState() => _LinkInsertDialogState();
@@ -39,7 +38,10 @@ class _LinkInsertDialogState extends State<LinkInsertDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Insert link', style: GoogleFonts.dmSans(fontWeight: FontWeight.w700)),
+      title: Text(
+        'Insert link',
+        style: GoogleFonts.dmSans(fontWeight: FontWeight.w700),
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -68,7 +70,9 @@ class _LinkInsertDialogState extends State<LinkInsertDialog> {
         ),
         FilledButton(
           onPressed: () {
-            final label = _text.text.trim().isEmpty ? _url.text.trim() : _text.text.trim();
+            final label = _text.text.trim().isEmpty
+                ? _url.text.trim()
+                : _text.text.trim();
             final url = _url.text.trim();
             if (url.isEmpty || url == 'https://') {
               ScaffoldMessenger.of(context).showSnackBar(
