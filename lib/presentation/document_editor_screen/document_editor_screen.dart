@@ -227,7 +227,7 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen>
     });
   }
 
-  Future<void> _openDocumentSettings() async {
+  Future<void> _openDocumentSettings(() async {
     final result = await showDocumentSettingsSheet(context, _docSettings);
     if (result == null || !mounted) return;
     setState(() {
@@ -923,7 +923,7 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen>
     return s;
   }
 
-  Future<void> _editImageAt(int idx) async {
+  Future<void> _editImageAt(int idx() async {
     if (idx < 0 || idx >= _embeddedImages.length) return;
     final img = _embeddedImages[idx];
     final path = img['path'] as String;
@@ -1146,7 +1146,7 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen>
 
   bool _pageLimitDialogOpen = false;
 
-  Future<void> _checkPageLimit() async {
+  Future<void> _checkPageLimit(() async {
     // Estimate pages from text length vs page body (same idea as indicator)
     final text = _bodyCtrl.text.isEmpty ? ' ' : _bodyCtrl.text;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -1213,7 +1213,7 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen>
     }
   }
 
-  Future<void> _pickImage() async {
+  Future<void> _pickImage(() async {
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
       builder: (ctx) => SafeArea(
@@ -1283,7 +1283,7 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen>
     }
   }
 
-  Future<void> _insertLink() async {
+  Future<void> _insertLink(() async {
     final sel = _bodyCtrl.selection;
     var selected = '';
     if (sel.isValid && !sel.isCollapsed) {
@@ -1302,7 +1302,7 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen>
     }
   }
 
-  Future<void> _insertTable({int rows = 3, int cols = 3}) async {
+  Future<void> _insertTable({int rows = 3, int cols = 3}() async {
     // If cursor is inside an existing [TABLE] block → edit it
     final cursor = _bodyCtrl.selection.isValid
         ? _bodyCtrl.selection.start
@@ -1348,7 +1348,7 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen>
       );
     }
   }
-) async {
+() async {
     final md = await TableEditorDialog.show(context);
     if (md == null || md.isEmpty) return;
     _insertAtCursor(md);
@@ -1787,7 +1787,7 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen>
     return text.substring(newlineIndex + 1);
   }
 
-  Future<void> _saveDocument() async {
+  Future<void> _saveDocument(() async {
     if (_isSaving) return;
     setState(() => _isSaving = true);
     try {
@@ -1837,7 +1837,7 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen>
     }
   }
 
-  Future<void> _exportDocument() async {
+  Future<void> _exportDocument(() async {
     if (_isSaving) return;
 
     // Show format picker dialog
@@ -2027,7 +2027,7 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen>
     }
   }
 
-  Future<void> _saveToDatabase() async {
+  Future<void> _saveToDatabase(() async {
     try {
       final l10n = AppLocalizations.of(context);
       final title = _extractTitle();
@@ -2072,7 +2072,7 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen>
     }
   }
 
-  Future<ExportFormat?> _showFormatPicker() async {
+  Future<ExportFormat?> _showFormatPicker(() async {
     final l10n = AppLocalizations.of(context);
     return showModalBottomSheet<ExportFormat>(
       context: context,
@@ -2620,7 +2620,7 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen>
     final theme = Theme.of(context);
     return PopScope(
       canPop: !_hasUnsavedChanges,
-      onPopInvokedWithResult: (didPop, result) async {
+      onPopInvokedWithResult: (didPop, result() async {
         if (didPop) return;
         final shouldPop = await showDialog<bool>(
           context: context,
@@ -2638,7 +2638,7 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen>
                   child: Text(l10n.cancel, style: GoogleFonts.dmSans()),
                 ),
                 FilledButton(
-                  onPressed: () async {
+                  onPressed: (() async {
                     await _saveDocument();
                     if (ctx.mounted) Navigator.pop(ctx, true);
                   },
@@ -3236,7 +3236,7 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen>
                                             Align(
                                               alignment: al,
                                               child: GestureDetector(
-                                                onLongPress: () async {
+                                                onLongPress: (() async {
                                                   final action = await showModalBottomSheet<String>(
                                                     context: context,
                                                     builder: (ctx) => SafeArea(
