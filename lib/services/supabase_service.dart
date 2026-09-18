@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DocumentModel {
@@ -73,29 +75,51 @@ class SupabaseService {
 
   SupabaseService._();
 
-  static const String supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: '',
-  );
-  static const String supabaseAnonKey = String.fromEnvironment(
-    'SUPABASE_ANON_KEY',
-    defaultValue: '',
-  );
+  static String supabaseUrl = '';
+  static String supabaseAnonKey = '';
+  static bool _initialized = false;
 
-  // Initialize Supabase - call this in main()
+  /// Load keys from assets/env.json or --dart-define, then init client.
   static Future<void> initialize() async {
-    if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
-      // Keys missing — app still runs; cloud features disabled
-      return;
+    if (_initialized) return;
+    // 1) dart-define
+    const defineUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: '');
+    const defineKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: '');
+    if (defineUrl.isNotEmpty && defineKey.isNotEmpty) {
+      supabaseUrl = defineUrl;
+      supabaseAnonKey = defineKey;
     }
-
-    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+    // 2) asset env.json
+    if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+      try {
+        final raw = await rootBundle.loadString('assets/env.json');
+        final map = jsonDecode(raw) as Map<String, dynamic>;
+        supabaseUrl = (map['SUPABASE_URL'] ?? '').toString();
+        supabaseAnonKey = (map['SUPABASE_ANON_KEY'] ?? map['SUPABASE_PUBLISHABLE_KEY'] ?? '').toString();
+      } catch (_) {}
+    }
+    // 3) hardcoded fallback (user project)
+    if (supabaseUrl.isEmpty) {
+      supabaseUrl = 'https://czewxsvfywqwfozrkbjc.supabase.co';
+    }
+    if (supabaseAnonKey.isEmpty) {
+      supabaseAnonKey = 'sb_publishable_TqgEkKDaHAQ7Hb9bcDcfRw_b8jLg5jJ';
+    }
+    if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) return;
+    try {
+      await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+      _initialized = true;
+    } catch (e) {
+      // already initialized
+      _initialized = true;
+    }
   }
 
   bool get isReady {
+    if (!_initialized) return false;
     try {
-      // ignore: unnecessary_null_comparison
-      return Supabase.instance.client != null;
+      Supabase.instance.client;
+      return true;
     } catch (_) {
       return false;
     }
@@ -238,6 +262,46 @@ class SupabaseService {
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
+
+  
+  Future<AuthResponse?> signUp({required String email, required String password}) async {
+    if (!isReady) return null;
+    return client.auth.signUp(email: email, password: password);
+  }
+
+  Future<AuthResponse?> signIn({required String email, required String password}) async {
+    if (!isReady) return null;
+    return client.auth.signInWithPassword(email: email, password: password);
+  }
+
+  Future<void> signOut() async {
+    if (!isReady) return;
+    await client.auth.signOut();
+  }
+
+  /// Push all local docs to cloud for current user (best-effort).
+  Future<int> syncLocalToCloud(List<Map<String, dynamic>> localDocs) async {
+    if (!isReady || !isAuthenticated) return 0;
+    var n = 0;
+    for (final d in localDocs) {
+      try {
+        final id = d['id']?.toString() ?? '';
+        final title = d['title']?.toString() ?? 'Untitled';
+        final content = d['content']?.toString() ?? '';
+        if (id.startsWith('local_')) {
+          await createDocument(title: title, content: content);
+        } else {
+          try {
+            await updateDocument(id: id, title: title, content: content);
+          } catch (_) {
+            await createDocument(title: title, content: content);
+          }
+        }
+        n++;
+      } catch (_) {}
+    }
+    return n;
+  }
 
   int _countWords(String text) {
     final trimmed = text.trim();

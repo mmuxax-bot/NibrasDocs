@@ -5,6 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 import './widgets/plan_page_view_widget.dart';
 import './widgets/pricing_header_widget.dart';
 import '../../theme/app_theme.dart';
+import '../../services/billing_service.dart';
+import '../../services/premium_service.dart';
 
 class PlanModel {
   final String id;
@@ -50,6 +52,16 @@ class SubscriptionPlanScreen extends StatefulWidget {
 class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
   int _currentPlanIndex = 0;
   late PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    BillingService.instance.init();
+    _pageController = PageController(
+      initialPage: _currentPlanIndex,
+      viewportFraction: 0.88,
+    );
+  }
 
   static final List<PlanModel> _plans = [
     PlanModel(
@@ -119,15 +131,6 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
       isPopular: false,
     ),
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController(
-      initialPage: _currentPlanIndex,
-      viewportFraction: 0.88,
-    );
-  }
 
   @override
   void dispose() {
@@ -217,7 +220,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
           ),
         ),
         content: Text(
-          '${plan.name} planına ${plan.price}${plan.period} qiymətinə abunə olmaq üzrəsiniz.\n\nLemon Squeezy vasitəsilə təhlükəsiz ödəniş.',
+          '${plan.name} planına ${plan.price}${plan.period} qiymətinə abunə olmaq üzrəsiniz.\n\nGoogle Play vasitəsilə təhlükəsiz ödəniş.',
           style: const TextStyle(color: Color(0xFF8899BB)),
         ),
         actions: [
@@ -242,51 +245,56 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
   }
 
   Future<void> _launchPayment(PlanModel plan) async {
-    // Lemon Squeezy checkout URLs — replace with your actual product URLs
-    final Map<String, String> checkoutUrls = {
-      'pro': const String.fromEnvironment(
-        'LEMON_PRO_URL',
-        defaultValue: 'https://nibrascode.lemonsqueezy.com/checkout/buy/pro',
-      ),
-      'elite': const String.fromEnvironment(
-        'LEMON_ELITE_URL',
-        defaultValue: 'https://nibrascode.lemonsqueezy.com/checkout/buy/elite',
-      ),
-    };
+    if (plan.id == 'free') return;
 
-    final url = checkoutUrls[plan.id];
-    if (url == null) return;
-
-    final uri = Uri.parse(url);
     try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Ödəniş səhifəsi açıla bilmədi.'),
-              backgroundColor: AppTheme.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          );
-        }
+      await BillingService.instance.init();
+      final started = await BillingService.instance.buy(plan.id);
+      if (started && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Opening Google Play for ${plan.name}...'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
       }
-    } catch (e) {
+    } catch (_) {}
+
+    if (!mounted) return;
+    final goTest = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Play Billing'),
+        content: const Text(
+          'Play Console product IDs: pro_monthly, elite_monthly.\n\n'
+          'Sideloaded APK cannot complete real purchase until the app is on Play.\n'
+          'Unlock test tier on this device?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Test unlock'),
+          ),
+        ],
+      ),
+    );
+    if (goTest == true) {
+      await PremiumService.setLocalTier(
+        plan.id == 'elite' ? PlanTier.elite : PlanTier.pro,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Xəta baş verdi. Yenidən cəhd edin.'),
-            backgroundColor: AppTheme.error,
+            content: Text('${plan.name} unlocked (test only)'),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
           ),
         );
+        context.pop();
       }
     }
   }

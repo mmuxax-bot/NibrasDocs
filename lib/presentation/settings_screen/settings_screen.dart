@@ -234,9 +234,16 @@ class SettingsScreen extends StatelessWidget {
       ),
       child: ListTile(
         onTap: () async {
-          await Supabase.instance.client.auth.signOut();
+          try {
+            await Supabase.instance.client.auth.signOut();
+          } catch (_) {}
           if (context.mounted) {
-            context.go(AppRoutes.authScreen);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Çıxış edildi. Sənədlər bu cihazda qalır.'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
           }
         },
         leading: Container(

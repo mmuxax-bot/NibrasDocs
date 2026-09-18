@@ -1,3 +1,4 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 
 enum AppLanguage { az, en, ru, ar }
@@ -63,10 +64,30 @@ class AppLocalizations extends ChangeNotifier {
   Locale get locale => _language.locale;
   TextDirection get textDirection => _language.textDirection;
 
+  static const _prefKey = 'nibras_language';
+
+  Future<void> loadSavedLanguage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final code = prefs.getString(_prefKey);
+      if (code == null) return;
+      for (final lang in AppLanguage.values) {
+        if (lang.code == code) {
+          _language = lang;
+          notifyListeners();
+          return;
+        }
+      }
+    } catch (_) {}
+  }
+
   void setLanguage(AppLanguage lang) {
     if (_language == lang) return;
     _language = lang;
     notifyListeners();
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setString(_prefKey, lang.code);
+    });
   }
 
   static AppLocalizations of(BuildContext context) {

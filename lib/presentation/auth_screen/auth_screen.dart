@@ -1,3 +1,5 @@
+import '../../services/local_docs_cache.dart';
+import '../../services/supabase_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
@@ -49,13 +51,18 @@ class _AuthScreenState extends State<AuthScreen> {
           password: _passwordCtrl.text,
         );
       }
+      // Sync offline docs to cloud
+      try {
+        final local = await LocalDocsCache.load();
+        await SupabaseService.instance.syncLocalToCloud(local);
+      } catch (_) {}
       if (mounted) {
-        context.go(AppRoutes.initial);
+        context.go(AppRoutes.documentsListScreen);
       }
     } on AuthException catch (e) {
       setState(() => _errorMessage = e.message);
     } catch (e) {
-      setState(() => _errorMessage = 'Xəta baş verdi. Yenidən cəhd edin.');
+      setState(() => _errorMessage = e.toString());
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

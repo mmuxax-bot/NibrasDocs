@@ -50,7 +50,44 @@ class _DocumentsListScreenState extends State<DocumentsListScreen>
       _error = null;
     });
     try {
-      final docs = await SupabaseService.instance.getDocuments();
+      // Part 1: local store is source of truth (always works offline)
+      final local = await LocalDocsCache.load();
+      final byId = <String, DocumentModel>{};
+      for (final m in local) {
+        final id = m['id']?.toString() ?? '';
+        if (id.isEmpty) continue;
+        DateTime parseDt(dynamic v) {
+          if (v is String) return DateTime.tryParse(v) ?? DateTime.now();
+          return DateTime.now();
+        }
+        byId[id] = DocumentModel(
+          id: id,
+          userId: 'local',
+          title: m['title']?.toString() ?? 'Untitled Document',
+          content: m['content']?.toString() ?? '',
+          isStarred: m['isStarred'] == true,
+          wordCount: (m['wordCount'] is int)
+              ? m['wordCount'] as int
+              : int.tryParse('${m['wordCount']}') ?? 0,
+          createdAt: parseDt(m['createdAt']),
+          updatedAt: parseDt(m['updatedAt']),
+        );
+      }
+      // Optional cloud merge when logged in
+      try {
+        if (SupabaseService.instance.isReady &&
+            SupabaseService.instance.isAuthenticated) {
+          final remote = await SupabaseService.instance.getDocuments();
+          for (final d in remote) {
+            final existing = byId[d.id];
+            if (existing == null || d.updatedAt.isAfter(existing.updatedAt)) {
+              byId[d.id] = d;
+            }
+          }
+        }
+      } catch (_) {}
+      final docs = byId.values.toList()
+        ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
       if (mounted) {
         setState(() {
           _docs = docs;
@@ -59,9 +96,8 @@ class _DocumentsListScreenState extends State<DocumentsListScreen>
       }
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context);
         setState(() {
-          _error = l10n.loadFailed;
+          _error = e.toString();
           _isLoading = false;
         });
       }
@@ -100,16 +136,48 @@ class _DocumentsListScreenState extends State<DocumentsListScreen>
     return '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year}';
   }
 
-  void _openEditor(DocumentModel doc) {
-    context.go(
-      AppRoutes.documentEditorScreen,
-      extra: {
-        'id': doc.id,
-        'title': doc.title,
-        'content': doc.content,
-        'wordCount': doc.wordCount,
-      },
-    );
+  Future<void> _openEditor(DocumentModel doc) async {
+    Map<String, dynamic>? settings;
+    try {
+      final local = await LocalDocsCache.load();
+      final match = local.where((e) => e['id'] == doc.id).toList();
+      if (match.isNotEmpty && match.first['settings'] is Map) {
+        settings = Map<String, dynamic>.from(match.first['settings'] as Map);
+      }
+      // Prefer local content if newer/available
+      if (match.isNotEmpty) {
+        final m = match.first;
+        if (m['content'] != null) {
+          // use local title/content
+        }
+      }
+    } catch (_) {}
+    if (!mounted) return;
+    final local = await LocalDocsCache.load();
+    Map<String, dynamic> extra = {
+      'id': doc.id,
+      'title': doc.title,
+      'content': doc.content,
+      'wordCount': doc.wordCount,
+    };
+    try {
+      final match = local.where((e) => e['id'] == doc.id).toList();
+      if (match.isNotEmpty) {
+        final m = match.first;
+        extra = {
+          'id': doc.id,
+          'title': m['title']?.toString() ?? doc.title,
+          'content': m['content']?.toString() ?? doc.content,
+          'wordCount': m['wordCount'] ?? doc.wordCount,
+          if (m['settings'] is Map)
+            'settings': Map<String, dynamic>.from(m['settings'] as Map),
+        };
+      } else if (settings != null) {
+        extra['settings'] = settings;
+      }
+    } catch (_) {}
+    if (!mounted) return;
+    context.push(AppRoutes.documentEditorScreen, extra: extra);
   }
 
   Future<void> _createNewDocument() async {
@@ -156,7 +224,13 @@ class _DocumentsListScreenState extends State<DocumentsListScreen>
   Future<void> _deleteDocument(DocumentModel doc) async {
     final l10n = AppLocalizations.of(context);
     try {
-      await SupabaseService.instance.deleteDocument(doc.id);
+      await LocalDocsCache.delete(doc.id);
+      try {
+        if (SupabaseService.instance.isReady &&
+            SupabaseService.instance.isAuthenticated) {
+          await SupabaseService.instance.deleteDocument(doc.id);
+        }
+      } catch (_) {}
       if (mounted) {
         setState(() => _docs.removeWhere((d) => d.id == doc.id));
         ScaffoldMessenger.of(context).showSnackBar(
@@ -186,14 +260,29 @@ class _DocumentsListScreenState extends State<DocumentsListScreen>
 
   Future<void> _toggleStarred(DocumentModel doc) async {
     try {
-      final updated = await SupabaseService.instance.toggleStarred(
-        doc.id,
-        doc.isStarred,
-      );
-      if (updated != null && mounted) {
+      final next = !doc.isStarred;
+      await LocalDocsCache.setStarred(doc.id, next);
+      try {
+        if (SupabaseService.instance.isReady &&
+            SupabaseService.instance.isAuthenticated) {
+          await SupabaseService.instance.toggleStarred(doc.id, doc.isStarred);
+        }
+      } catch (_) {}
+      if (mounted) {
         setState(() {
           final idx = _docs.indexWhere((d) => d.id == doc.id);
-          if (idx != -1) _docs[idx] = updated;
+          if (idx != -1) {
+            _docs[idx] = DocumentModel(
+              id: doc.id,
+              userId: doc.userId,
+              title: doc.title,
+              content: doc.content,
+              isStarred: next,
+              wordCount: doc.wordCount,
+              createdAt: doc.createdAt,
+              updatedAt: DateTime.now(),
+            );
+          }
         });
       }
     } catch (_) {}

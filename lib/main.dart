@@ -5,6 +5,7 @@ import 'package:sizer/sizer.dart';
 
 import './l10n/app_localizations.dart';
 import './services/supabase_service.dart';
+import './services/billing_service.dart';
 import './widgets/custom_error_widget.dart';
 import 'core/app_export.dart';
 
@@ -16,6 +17,14 @@ void main() async {
     await SupabaseService.initialize();
   } catch (e) {
     debugPrint('Failed to initialize Supabase: $e');
+  }
+  try {
+    await AppLocalizations().loadSavedLanguage();
+  } catch (_) {}
+  try {
+    await BillingService.instance.init();
+  } catch (e) {
+    debugPrint('Billing init: $e');
   }
 
   bool hasShownError = false;

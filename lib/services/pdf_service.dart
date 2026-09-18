@@ -11,12 +11,20 @@ class PdfService {
     required bool isBold,
     required bool isItalic,
     required bool isUnderline,
+    bool showPageNumbers = true,
+    String pageNumberPos = 'bottom-center',
+    String headerText = '',
+    String footerText = '',
   }) async {
     if (kIsWeb) return;
     await MobileExportService.exportPdf(
       title: title,
       content: content,
       pageSize: pageSize,
+      showPageNumbers: showPageNumbers,
+      pageNumberPos: pageNumberPos,
+      headerText: headerText,
+      footerText: footerText,
     );
   }
 }

@@ -13,19 +13,48 @@ import '../core/page_size.dart';
 
 /// Cross-platform export: saves PDF/DOCX and opens the system share sheet.
 class MobileExportService {
+  /// Clean editor markers for export (markdown + internal tags).
   static String _stripFormatTags(String input) {
     var s = input;
-    s = s.replaceAll(RegExp(r'\[color=#[0-9A-Fa-f]{6}\]'), '');
+    s = s.replaceAll(RegExp(r'\[color=#[0-9A-Fa-f]{6,8}\]'), '');
     s = s.replaceAll('[/color]', '');
-    s = s.replaceAll(RegExp(r'\[bg=#[0-9A-Fa-f]{6}\]'), '');
+    s = s.replaceAll(RegExp(r'\[bg=#[0-9A-Fa-f]{6,8}\]'), '');
     s = s.replaceAll('[/bg]', '');
+    s = s.replaceAll(RegExp(r'\\[size=\\d+\\]'), '');
+    s = s.replaceAll('[/size]', '');
+    s = s.replaceAll(RegExp(r'\\[align=(left|center|right|justify)\\]'), '');
+    s = s.replaceAll(RegExp(r'\[img path="[^"]*" w=[0-9.]+\]'), '[Image]');
+    s = s.replaceAll('[TABLE]', '');
+    s = s.replaceAll('[/TABLE]', '');
+    s = s.replaceAll('[DIAGRAM]', '');
+    s = s.replaceAll('[/DIAGRAM]', '');
+    s = s.replaceAll('--- Page Break ---', '\n');
+    // Keep table pipes as readable lines; strip emphasis markers lightly
+    s = s.replaceAllMapped(RegExp(r'\*\*(.+?)\*\*'), (m) => m.group(1) ?? '');
+    s = s.replaceAllMapped(RegExp(r'__(.+?)__'), (m) => m.group(1) ?? '');
+    s = s.replaceAllMapped(RegExp(r'~~(.+?)~~'), (m) => m.group(1) ?? '');
+    // italic single * careful - only paired
+    s = s.replaceAllMapped(RegExp(r'(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)'), (m) => m.group(1) ?? '');
     return s;
   }
+
+  static String _safeFileName(String title, String ext) {
+    var base = title.trim().isEmpty ? 'Nibras_Document' : title.trim();
+    base = base.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
+    base = base.replaceAll(RegExp(r'\s+'), '_');
+    if (base.length > 60) base = base.substring(0, 60);
+    return '$base.$ext';
+  }
+
 
   static Future<void> exportPdf({
     required String title,
     required String content,
     required PageSize pageSize,
+    bool showPageNumbers = true,
+    String pageNumberPos = 'bottom-center',
+    String headerText = '',
+    String footerText = '',
   }) async {
     if (kIsWeb) return;
 
@@ -46,22 +75,58 @@ class MobileExportService {
       pw.MultiPage(
         pageFormat: pageFormat,
         margin: const pw.EdgeInsets.all(40),
-        header: (context) => pw.Container(
-          alignment: pw.Alignment.centerRight,
-          margin: const pw.EdgeInsets.only(bottom: 8),
-          child: pw.Text(
-            safeTitle,
-            style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
-          ),
-        ),
-        footer: (context) => pw.Container(
-          alignment: pw.Alignment.center,
-          margin: const pw.EdgeInsets.only(top: 8),
-          child: pw.Text(
-            '${context.pageNumber} / ${context.pagesCount}',
-            style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
-          ),
-        ),
+        header: (context) {
+          final h = headerText.trim().isNotEmpty ? headerText.trim() : safeTitle;
+          final showNumTop = showPageNumbers && pageNumberPos.startsWith('top');
+          pw.Alignment align = pw.Alignment.centerRight;
+          if (pageNumberPos.endsWith('left')) align = pw.Alignment.centerLeft;
+          if (pageNumberPos.endsWith('center')) align = pw.Alignment.center;
+          return pw.Container(
+            alignment: align,
+            margin: const pw.EdgeInsets.only(bottom: 8),
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Expanded(
+                  child: pw.Text(
+                    h,
+                    style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+                  ),
+                ),
+                if (showNumTop)
+                  pw.Text(
+                    '${context.pageNumber} / ${context.pagesCount}',
+                    style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
+                  ),
+              ],
+            ),
+          );
+        },
+        footer: (context) {
+          final showNumBottom = showPageNumbers && !pageNumberPos.startsWith('top');
+          pw.Alignment align = pw.Alignment.center;
+          if (pageNumberPos.endsWith('left')) align = pw.Alignment.centerLeft;
+          if (pageNumberPos.endsWith('right')) align = pw.Alignment.centerRight;
+          final f = footerText.trim();
+          return pw.Container(
+            alignment: align,
+            margin: const pw.EdgeInsets.only(top: 8),
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text(
+                  f,
+                  style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+                ),
+                if (showNumBottom)
+                  pw.Text(
+                    '${context.pageNumber} / ${context.pagesCount}',
+                    style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                  ),
+              ],
+            ),
+          );
+        },
         build: (context) => [
           pw.Text(
             safeTitle,
@@ -88,7 +153,7 @@ class MobileExportService {
     );
 
     final bytes = await doc.save();
-    await _shareBytes(bytes, '$safeTitle.pdf', 'application/pdf');
+    await _shareBytes(bytes, _safeFileName(safeTitle, 'pdf'), 'application/pdf');
   }
 
   static Future<void> exportDocx({
@@ -98,10 +163,10 @@ class MobileExportService {
     if (kIsWeb) return;
 
     final safeTitle = title.trim().isEmpty ? 'Untitled_Document' : title.trim();
-    final bytes = _buildDocx(title: safeTitle, content: content);
+    final bytes = _buildDocx(title: safeTitle, content: _stripFormatTags(content));
     await _shareBytes(
       bytes,
-      '${safeTitle.replaceAll(RegExp(r'[^\w\s-]'), '').replaceAll(' ', '_')}.docx',
+      _safeFileName(safeTitle, 'docx'),
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     );
   }
@@ -113,8 +178,8 @@ class MobileExportService {
   }) async {
     if (kIsWeb) return;
     final safeTitle = title.trim().isEmpty ? 'Untitled' : title.trim();
-    final bytes = Uint8List.fromList(utf8.encode(content));
-    await _shareBytes(bytes, '$safeTitle.txt', 'text/plain');
+    final bytes = Uint8List.fromList(utf8.encode(_stripFormatTags(content)));
+    await _shareBytes(bytes, _safeFileName(safeTitle, 'txt'), 'text/plain');
   }
 
 
@@ -124,11 +189,11 @@ class MobileExportService {
   }) async {
     if (kIsWeb) return;
     final safeTitle = title.trim().isEmpty ? 'Untitled' : title.trim();
-    final bytes = _buildEpub(title: safeTitle, content: content);
+    final bytes = _buildEpub(title: safeTitle, content: _stripFormatTags(content));
     final name = safeTitle
         .replaceAll(RegExp(r'[^\w\s-]'), '')
         .replaceAll(' ', '_');
-    await _shareBytes(bytes, '$name.epub', 'application/epub+zip');
+    await _shareBytes(bytes, _safeFileName(safeTitle, 'epub'), 'application/epub+zip');
   }
 
   static Uint8List _buildEpub({
@@ -198,19 +263,29 @@ class MobileExportService {
     return RegExp(r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]').hasMatch(text);
   }
 
-  static Future<void> _shareBytes(
+  static Future<String> _shareBytes(
     Uint8List bytes,
     String filename,
     String mime,
   ) async {
-    final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/$filename');
+    final tmp = await getTemporaryDirectory();
+    final file = File('${tmp.path}/$filename');
     await file.writeAsBytes(bytes, flush: true);
+    // Durable copy under app documents
+    try {
+      final docs = await getApplicationDocumentsDirectory();
+      final durable = File('${docs.path}/exports/$filename');
+      await durable.parent.create(recursive: true);
+      await durable.writeAsBytes(bytes, flush: true);
+    } catch (_) {}
     await Share.shareXFiles(
       [XFile(file.path, mimeType: mime, name: filename)],
       subject: filename,
+      text: 'Exported from Nibras Docs',
     );
+    return file.path;
   }
+
 
   /// Minimal valid DOCX (Office Open XML)
   static Uint8List _buildDocx({

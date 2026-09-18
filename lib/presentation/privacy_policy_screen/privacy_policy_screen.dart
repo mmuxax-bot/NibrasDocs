@@ -18,7 +18,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Məxfilik Siyasəti',
+          'Privacy Policy',
           style: TextStyle(
             color: AppTheme.goldLight,
             fontWeight: FontWeight.w700,
@@ -64,7 +64,8 @@ class PrivacyPolicyScreen extends StatelessWidget {
               '4. Üçüncü Tərəf Xidmətlər',
               'Nibras Docs aşağıdakı üçüncü tərəf xidmətlərindən istifadə edir:\n\n'
                   '• Supabase — verilənlər bazası və autentifikasiya\n'
-                  '• Lemon Squeezy — ödəniş emalı (premium abunəliklər üçün)\n\n'
+                  '• Google Play Billing — abunəlik ödənişləri\n'
+                  '• Supabase — bulud sync (istəyə bağlı hesab)\n\n'
                   'Bu xidmətlər öz məxfilik siyasətlərinə malikdir.',
             ),
             _buildSection(
