@@ -1348,7 +1348,6 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen>
       );
     }
   }
-) async {
     final md = await TableEditorDialog.show(context);
     if (md == null || md.isEmpty) return;
     _insertAtCursor(md);
